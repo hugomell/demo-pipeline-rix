@@ -220,8 +220,49 @@ podman run --rm -it --name demo-rix demo-rix-image
 
 Ok, I have access to both {dplyr} and {ggplot2} from within the Nix shell.
 
-### Deploying simple container to Github codespaces
+### Deploying simple container to Github Codespaces
 
+First, I needed to create a new repository on Github and push my local repo
+to it:
+
+```bash
+
+git remote add github-remote git@github.com:hugomell/demo-pipeline-rix.git
+
+git push github-remote main
+
+```
+
+Then, I add a `devcontainer.json` file to the project:
+
+```json
+# copy to devcontainer.json
+{
+    "name" : "Nix inide Docker on Github",
+    "build" : {
+        "dockerfile" : "Containerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": ["reditorsupport.r"]
+        }
+    }
+}
+```
+
+I can remove the 
+
+
+```bash
+# make sure to build image with tag starting with docker.io/hugomell
+podman build -t docker.io/hugomell/bayes_cli-dev:4.3.1 .
+# login to docker hub
+podman login docker.io
+
+# push image to docker hub
+podman push docker.io/hugomell/bayes_cli-dev:4.3.1
+
+```
 
 
 
@@ -233,3 +274,7 @@ Ok, I have access to both {dplyr} and {ggplot2} from within the Nix shell.
 [vignette](https://docs.ropensci.org/rixpress/articles/tutorial.html) 
 * Using Nix inside Docker is documented in this
 [vignette](https://cran.r-project.org/web/packages/rix/vignettes/z-advanced-topic-using-nix-inside-docker.html) 
+* Codespaces with R project:
+  - [Step-by-step guide](https://github.com/RamiKrispin/vscode-r#setting-the-dev-containers-extension) 
+  - [Post on RStudio and devcontainers](https://medium.com/@adnaan525/codespace-the-next-best-thing-since-sliced-bread-439a13aba0ec) 
+
