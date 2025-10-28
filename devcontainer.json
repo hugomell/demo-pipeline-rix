@@ -1,0 +1,12 @@
+{
+    "name" : "Nix inide Docker on Github",
+    "build" : {
+        "dockerfile" : "Containerfile"
+    },
+
+    "customizations": {
+        "vscode": {
+            "extensions": ["reditorsupport.r"]
+        }
+    }
+}
