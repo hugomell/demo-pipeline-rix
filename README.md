@@ -3,7 +3,7 @@
 
 ## Nix configuration
 
-To manage the pipeline dependencies, I will need Nix, `rix` and `rixpress`.
+To manage the pipeline dependencies, I will need Nix and `rix`.
 
 I already have installed Nix on my machine using The Determinate Nix
 Installer, but I am not sure I have the `cachix` client and `rstats-on-nix`
@@ -56,9 +56,9 @@ cachix use rstats-on-nix
 
 Ok, now we should be good to go!
 
-## Bootstrapping a project
 
-### Defining and building the environment
+
+## Bootstrapping a `rix` project
 
 ```bash
 
@@ -66,13 +66,7 @@ nix-shell --expr "$(curl -sl https://raw.githubusercontent.com/ropensci/rix/main
 
 ```
 
-```R
-
-library(rixpress)
-
-rxp_init()
-
-```
+Write a `gen-env.R` file with the following content:
 
 ```R
 # copy to `gen-env.R` 
@@ -81,13 +75,8 @@ library(rix)
 # Define execution environment
 rix(
   date = "2025-04-11",
-  r_pkgs = c("dplyr", "igraph"),
-  git_pkgs = list(
-    package_name = "rixpress",
-    repo_url = "https://github.com/ropensci/rixpress",
-    commit = "HEAD"
-  ),
-  ide = "rstudio",
+  r_pkgs = c("dplyr", "ggplot2"),
+  ide = "none",
   project_path = ".",
   overwrite = TRUE
 )
@@ -101,46 +90,11 @@ Rscript gen-env.R
 
 ```
 
-And in a regular shell: `nix-build` (took maybe ~15 minutes to build, but
-a lot of the time probably was for the installation of RStudio).
+And in a regular shell: `nix-build`
 
-To use the environment I can run `nix-shell` and then `rstudio`.
+To use the environment I can run `nix-shell`.
 
-### Defining and building the pipeline
 
-Next, we define our pipeline:
-
-```R
-# copy to `gen-pipeline.R` 
-library(rixpress)
-library(igraph)
-
-list(
-  rxp_r_file(
-    name = mtcars,
-    path = 'data/mtcars.csv',
-    read_function = \(x) (read.csv(file = x, sep = "|"))
-  ),
-
-  rxp_r(
-    name = filtered_mtcars,
-    expr = filter(mtcars, am == 1)
-  )
-) |> rxp_populate(build = TRUE)
-```
-
-We can source the file to build it: `source("gen-pipeline.R")` 
--> Successful built! \o/
-
-```R
-
-rxp_read("filtered_mtcars")
-
-# to save the object:
-rxp_load("filtered_mtcars")
-# which is equivalent to `filtered_mtcars <- rxp_read("filtered_mtcars")`
-
-```
 
 ## Using containers to manage the environment
 
@@ -156,6 +110,8 @@ FROM ubuntu:latest
 RUN apt update -y
 
 RUN apt install curl -y
+
+WORKDIR /code
 
 # Download default `default.nix` 
 RUN curl -O https://raw.githubusercontent.com/ropensci/rix/main/inst/extdata/default.nix
@@ -178,6 +134,7 @@ RUN mkdir -p /root/.config/nix && \
     echo "substituters = https://cache.nixos.org https://rstats-on-nix.cachix.org" > /root/.config/nix/nix.conf && \
     echo "trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= rstats-on-nix.cachix.org-1:vdiiVgocg6WeJrODIqdprZRUrhi1JzhBnXv7aWI6+F0=" >> /root/.config/nix/nix.conf
 
+
 # Overwrite the default.nix downloaded previously
 RUN nix-shell --run "Rscript gen-env.R"
 
@@ -186,20 +143,6 @@ RUN nix-build
 
 # Start Nix shell
 CMD nix-shell
-```
-
-I simplified a bit my `gen-env.R` to test the workflow first:
-
-```R
-library(rix)
-
-rix(
-  r_ver = "4.3.1",
-  r_pkgs = c("dplyr", "ggplot2"),
-  ide = "none",
-  project_path = ".",
-  overwrite = TRUE
-)
 ```
 
 To build the image:
@@ -218,9 +161,9 @@ podman run --rm -it --name demo-rix demo-rix-image
 
 ```
 
-Ok, I have access to both {dplyr} and {ggplot2} from within the Nix shell.
+Ok, I have access to both `dplyr` and `ggplot2` from within the Nix shell.
 
-### Deploying simple container to Github Codespaces
+### Deploying simple devcontainer to Github Codespaces
 
 First, I needed to create a new repository on Github and push my local repo
 to it:
@@ -233,36 +176,49 @@ git push github-remote main
 
 ```
 
-Then, I add a `devcontainer.json` file to the project:
+Then, I add a `.devcontainer.json` file at the root of the project:
 
 ```json
-# copy to devcontainer.json
+# copy to .devcontainer.json
 {
-    "name" : "Nix inide Docker on Github",
+    "name" : "Nix inside Docker on Github",
     "build" : {
         "dockerfile" : "Containerfile"
     },
     "customizations": {
         "vscode": {
-            "extensions": ["reditorsupport.r"]
+            "extensions": [
+                "REditorSupport.r",
+                "quarto.quarto"
+            ],
+            "settings": {
+                "r.plot.devArgs": {
+                      "width": 1200,
+                      "height": 500
+                    },
+                "workbench.editorAssociations": {
+                      "*.qmd": "quarto.visualEditor"
+                    }
+            }
         }
     }
 }
 ```
 
-I can remove the 
+Now I should be able to create a Codespace from the Github repository home
+page that spins up the devcontainer defined above.
 
+### Running the devcontainer locally
+
+I can do so easily with `devpod`:
 
 ```bash
-# make sure to build image with tag starting with docker.io/hugomell
-podman build -t docker.io/hugomell/bayes_cli-dev:4.3.1 .
-# login to docker hub
-podman login docker.io
-
-# push image to docker hub
-podman push docker.io/hugomell/bayes_cli-dev:4.3.1
-
+devpod up . --ide=none /code
 ```
+
+
+
+## Build a reproducible pipeline with `targets` 
 
 
 
@@ -277,4 +233,5 @@ podman push docker.io/hugomell/bayes_cli-dev:4.3.1
 * Codespaces with R project:
   - [Step-by-step guide](https://github.com/RamiKrispin/vscode-r#setting-the-dev-containers-extension) 
   - [Post on RStudio and devcontainers](https://medium.com/@adnaan525/codespace-the-next-best-thing-since-sliced-bread-439a13aba0ec) 
+  - [devcontainer Configuration for R](https://earthdatascience.org/pages/10-get-started/r-codespaces/02-r-devcontainer.html) 
 

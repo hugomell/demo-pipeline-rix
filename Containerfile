@@ -4,6 +4,8 @@ RUN apt update -y
 
 RUN apt install curl -y
 
+WORKDIR /code
+
 # Download default `default.nix` 
 RUN curl -O https://raw.githubusercontent.com/ropensci/rix/main/inst/extdata/default.nix
 
@@ -27,6 +29,8 @@ RUN mkdir -p /root/.config/nix && \
 
 # Overwrite the default.nix downloaded previously
 RUN nix-shell --run "Rscript gen-env.R"
+
+RUN echo $PWD
 
 # Build the environment
 RUN nix-build

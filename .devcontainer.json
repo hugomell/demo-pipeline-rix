@@ -1,6 +1,23 @@
 {
-    "name" : "Nix inide Docker on Github",
+    "name" : "Nix inside Docker on Github",
     "build" : {
         "dockerfile" : "Containerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "REditorSupport.r",
+                "quarto.quarto"
+            ],
+            "settings": {
+                "r.plot.devArgs": {
+                      "width": 1200,
+                      "height": 500
+                    },
+                "workbench.editorAssociations": {
+                      "*.qmd": "quarto.visualEditor"
+                    }
+            }
+        }
     }
 }
