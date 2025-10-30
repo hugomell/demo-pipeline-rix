@@ -1,2 +1,5 @@
 result
 _rixpress/
+_targets/
+*.html
+*_files/

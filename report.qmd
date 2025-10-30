@@ -1,0 +1,10 @@
+---
+title: report.qmd source file
+output_format: html
+---
+
+Assume thes lines are in report.qmd.
+
+```{r}
+targets::tar_read(data)
+```
