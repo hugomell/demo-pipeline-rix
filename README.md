@@ -296,10 +296,7 @@ section of the quarto [docs](https://quarto.org/docs/output-formats/pdf-engine.h
 But anyway I want to build HTML documents so let's leave this issue aside for
 now.
 
-
-### Quarto document as output of a `targets` pipeline
-
-#### Testing simple brms model in Nix managed environment
+### Test fitting a simple brms model in Nix managed environment
 
 Goal here is to build a targets pipeline that produce a quarto document
 which will be a stripped down version of the section of the first chapter of
@@ -373,7 +370,124 @@ draws <- as_draws_df(fit_epi_gaussian1) %>%
 bayesplot::mcmc_hist(draws, c("sigma2", "mu_Trt"), bins = 30)
 ```
 
-#### Building the pipeline
+### Test producing quarto documents as outputs of targets pipelines
+
+#### Output is a simple quarto report
+
+```bash
+
+touch _targets.R
+touch report.qmd
+
+```
+
+Below I follow the simple example given in `?tarchetypes::tar_quarto` where
+the pipeline final output is the compilation to HTML of a single quarto report:
+
+```r
+# in _targets.R
+
+# Load packages required to define the pipeline:
+library(targets)
+library(tarchetypes) # Load other packages as needed.
+
+# Define the target list with the pipeline steps:
+list(
+  tar_target(
+    name = data,
+    command = data.frame(x = seq_len(26), y = letters)
+  ),
+  # Compile quarto report
+  tar_quarto(
+    name = report,
+    path = "report.qmd"
+  )
+)
+```
+
+#### Output is a quarto website
+
+First, we create a subfolder `site` that will contain all the files for our
+static quarto website:
+
+```bash
+
+quarto create project website site
+
+# To preview the site (can be run from the project's root):
+quarto preview site
+
+```
+
+To be able to use functions like `targets::tar_read()` or
+`targets::tar_load()`, in the quarto notebooks that make the pages of the
+website, I needed to add the following `_targets.yaml` file in the `site/`
+folder:
+
+```yaml
+# _targets.yaml
+main:
+  store: ../_targets/
+```
+
+Now the data objects generated during the execution of the pipeline and stored
+inside the `_targets/` can be accessed without error.
+
+*NB: This is useful mainly to be build quarto notebooks directly, without
+running `targets::tar_make()`*
+
+I changed the `_targets.R` such that the full website is rebuilt at the end of
+the pipeline and not just a single quarto document:
+
+```r
+# ...
+
+  # Compile quarto report
+  tar_quarto(
+    name = report,
+    path = "report.qmd"
+  )
+
+  # Now becomes:
+  # Compile quarto website
+  tar_quarto(
+    name = website,
+    path = "./site"
+  )
+```
+
+To build the website: `targets::tar_make()`.
+
+
+##### Publishing the website using Github Pages
+
+1. Create a `gh-pages` in Git repository:
+
+```bash
+git checkout --orphan gh-pages
+git reset --hard # make sure all changes are committed before running this!
+git commit --allow-empty -m "Initialising gh-pages branch"
+git push origin gh-pages
+```
+
+2. In the Github repository settings: check that the source branch is
+   `gh-pages` and that the site directory is set to the repository root (`/`)
+
+  ![](/home/hugo/notes/supp/20251104153925/img/20251104153925_img1.png)
+
+3. In `site/.gitignore`:
+
+```.gitignore
+/.quarto/
+/_site/
+```
+
+4. Publish the website:
+
+```bash
+quarto publish gh-pages
+```
+
 
 
 

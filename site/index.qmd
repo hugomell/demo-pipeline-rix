@@ -1,0 +1,9 @@
+---
+title: "Test quarto website"
+---
+
+This is where I described for this companion website to the pre-registered
+submission.
+
+A link to the demonstration pipeline *per se* is available in the navbar at the
+top of this index page.

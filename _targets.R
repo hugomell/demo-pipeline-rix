@@ -10,7 +10,7 @@ list(
   ),
   # Compile quarto report
   tar_quarto(
-    name = report,
-    path = "report.qmd"
+    name = site,
+    path = "./site"
   )
 )

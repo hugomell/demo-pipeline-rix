@@ -1,0 +1,12 @@
+---
+title: "Demo pipeline"
+---
+
+In this demonstration notebook, I test fitting a brms model.
+
+Assume these lines are in report.qmd.
+
+```{r}
+targets::tar_read(data)
+```
+
