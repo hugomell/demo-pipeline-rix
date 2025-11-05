@@ -1,0 +1,16 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Test quarto website",
+    "section": "",
+    "text": "This is where I described for this companion website to the pre-registered submission.\nA link to the demonstration pipeline per se is available in the navbar at the top of this index page."
+  },
+  {
+    "objectID": "demo-pipeline.html",
+    "href": "demo-pipeline.html",
+    "title": "Demo pipeline",
+    "section": "",
+    "text": "In this demonstration notebook, I test fitting a brms model.\nAssume these lines are in report.qmd.\n\ntargets::tar_read(data)\n\n    x y\n1   1 a\n2   2 b\n3   3 c\n4   4 d\n5   5 e\n6   6 f\n7   7 g\n8   8 h\n9   9 i\n10 10 j\n11 11 k\n12 12 l\n13 13 m\n14 14 n\n15 15 o\n16 16 p\n17 17 q\n18 18 r\n19 19 s\n20 20 t\n21 21 u\n22 22 v\n23 23 w\n24 24 x\n25 25 y\n26 26 z"
+  }
+]
